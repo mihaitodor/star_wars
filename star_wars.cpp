@@ -2,97 +2,13 @@
 
 #include "star_wars.h"
 
-namespace {
-    char* myStrings[]={
-        "It is a period of civil war.",
-        "Rebel spaceships, striking",
-        "from a hidden base, have won",
-        "their first victory against",
-        "the evil Galactic Empire.",
-        "",
-        "During the battle, Rebel",
-        "spies managed to steal secret",
-        "plans to the Empire's",
-        "ultimate weapon, the DEATH",
-        "STAR, an armored space",
-        "station with enough power",
-        "to destroy an entire planet.",
-        "",
-        "Pursued by the Empire's",
-        "sinister agents, Princess",
-        "Leia races home aboard her",
-        "starship, custodian of the",
-        "stolen plans that can save her",
-        "people and restore",
-        "freedom to the galaxy..."
-    };
-}
-
-/*
- Demonstrates the use a 16x2 LCD display. The LiquidCrystal
- library works with all LCD displays that are compatible with the
- Hitachi HD44780 driver. There are many of them out there, and you
- can usually tell them by the 16-pin interface.
-
- The circuit:
- * LCD RS pin to digital pin 12
- * LCD Enable pin to digital pin 11
- * LCD D4 pin to digital pin 5
- * LCD D5 pin to digital pin 4
- * LCD D6 pin to digital pin 3
- * LCD D7 pin to digital pin 2
- * LCD R/W pin to ground
- * 10K resistor:
- * ends to +5V and ground
- * wiper to LCD VO pin (pin 3)
-*/
-StarWars::StarWars() :
-    //                 rs, en, d0, d1, d2, d3, d4, d5, d6, d7
-    lcd_(LiquidCrystal(12, 11,  9,  8,  7,  6,  5,  4,  3,  2)),
-    // Use pin 0 for the buzzer
-    timers_(0) {
-
-    // Set up the LCD's number of columns and rows
-    lcd_.begin(16, 2);
-}
-
-StarWars &StarWars::GetInstance() {
-    static StarWars sw;
-
-    return sw;
-}
-
-void StarWars::PrintTitle() {
-    lcd_.setCursor(6, 0);
-    lcd_.print("STAR");
-    lcd_.setCursor(6, 1);
-    lcd_.print("WARS");
-}
-
-void StarWars::FadeTitle() {
-    static unsigned long iterations = 0;
-
-    iterations++;
-
-    //if (iterations > 300000) {
-        lcd_.setCursor(6, 1);
-        lcd_.blink();
-        lcd_.setCursor(7, 1);
-        lcd_.blink();
-        lcd_.setCursor(8, 1);
-        lcd_.blink();
-        lcd_.setCursor(9, 1);
-        lcd_.blink();
-    //}
-}
-
 // Source for audio: http://www.instructables.com/id/How-to-easily-play-music-with-buzzer-on-arduino-Th/
-// More details: https://github.com/bhagman/Tone
+// Direct code link: https://github.com/bhagman/Tone
 
 // NB: ALL NOTES DEFINED WITH STANDARD ENGLISH NAMES, EXCEPT FROM "A"
 //THAT IS CALLED WITH THE ITALIAN NAME "LA" BECAUSE A0,A1...ARE THE ANALOG PINS ON ARDUINO.
 // (Ab IS CALLED Ab AND NOT LAb)
-#define C0 16.35
+#define C0  16.35
 #define Db0 17.32
 #define D0  18.35
 #define Eb0 19.45
@@ -193,224 +109,210 @@ void StarWars::FadeTitle() {
 #define D8  4698.64
 #define Eb8 4978.03
 // DURATION OF THE NOTES
-#define BPM 120    //  you can change this value changing all the others
-#define H 2*Q //half 2/4
-#define Q 60000/BPM //quarter 1/4
-#define E Q/2   //eighth 1/8
-#define S Q/4 // sixteenth 1/16
-#define W 4*Q // whole 4/4
+#define BPM 120 // you can change this value changing all the others
+#define H   2*Q // half 2/4
+#define Q   60000/BPM // quarter 1/4
+#define E   Q/2 // eighth 1/8
+#define S   Q/4 // sixteenth 1/16
+#define W   4*Q // whole 4/4
 
-#define TP 0
-
-
-
-Timers::Timers(uint8_t pin) :
-    pin_(pin),
-    notes_{},
-    freq_{},
-    durations_{},
-    doubleDelays_{},
-    millis_{},
-    totalMillis_(0) {
+namespace {
+    char* myStrings[]={
+        "It is a period of civil war.",
+        "Rebel spaceships, striking",
+        "from a hidden base, have won",
+        "their first victory against",
+        "the evil Galactic Empire.",
+        "",
+        "During the battle, Rebel",
+        "spies managed to steal secret",
+        "plans to the Empire's",
+        "ultimate weapon, the DEATH",
+        "STAR, an armored space",
+        "station with enough power",
+        "to destroy an entire planet.",
+        "",
+        "Pursued by the Empire's",
+        "sinister agents, Princess",
+        "Leia races home aboard her",
+        "starship, custodian of the",
+        "stolen plans that can save her",
+        "people and restore",
+        "freedom to the galaxy..."
+    };
 }
 
-void Timers::Add(uint8_t freq, uint8_t duration, bool doubleDelay = false) {
-    freq_[notes_] = freq;
-    durations_[notes_] = duration;
-    doubleDelays_[notes_] = doubleDelay; //TODO: Remove member & refactor
+/*
+ Set up a 16x2 LCD display. The LiquidCrystal library works with all
+ LCD displays that are compatible with the Hitachi HD44780 driver.
+ There are many of them out there, and you can usually tell them by
+ the 16-pin interface.
 
-    if (notes_ == 0) {
-        millis_[notes_] = duration;
-    } else {
-        millis_[notes_] = millis_[notes_ - 1] + duration;
-    }
+ The circuit:
+ * LCD Register Select RS pin (pin 4) to digital pin 13
+ * LCD Enable E pin (pin 6) to digital pin 12
+ * LCD D0 pin (pin 7) to digital pin 11
+ * LCD D1 pin (pin 8) to digital pin 10
+ * LCD D2 pin (pin 9) to digital pin 9
+ * LCD D3 pin (pin 10) to digital pin 8
+ * LCD D4 pin (pin 11) to digital pin 7
+ * LCD D5 pin (pin 12) to digital pin 6
+ * LCD D6 pin (pin 13) to digital pin 5
+ * LCD D7 pin (pin 14) to digital pin 4
+ * LCD R/W pin (pin 5) to ground
+ * LCD backlight anode A pin (pin 15) to +5V through a 220 ohm resistor
+ * LCD backlight cathode K pin (pin 16) to ground
+ * LCD VSS pin (pin 0) to ground
+ * LCD VDD pin (pin 1) to +5V
+ * 10k potentiometer to LCD display contrast VO pin (pin 3)
+*/
+StarWars::StarWars() :
+    //                 rs, en,  d0,  d1, d2, d3, d4, d5, d6, d7
+    lcd_(LiquidCrystal(13, 12,  11,  10,  9,  8,  7,  6,  5,  4)),
+
+    buzzerPin_(3) {
+
+    // Set up the LCD's number of columns and rows
+    lcd_.begin(16, 2);
+}
+
+const StarWars &StarWars::GetInstance() {
+    static StarWars sw;
+
+    return sw;
+}
+
+void StarWars::PrintTitle() {
+    lcd_.setCursor(6, 0);
+    lcd_.print("STAR");
+    lcd_.setCursor(6, 1);
+    lcd_.print("WARS");
+}
+
+//void StarWars::FadeTitle() {
+    // static unsigned long iterations = 0;
+
+    // iterations++;
+
+    //if (iterations > 300000) {
+        // lcd_.setCursor(6, 1);
+        // lcd_.blink();
+        // lcd_.setCursor(7, 1);
+        // lcd_.blink();
+        // lcd_.setCursor(8, 1);
+        // lcd_.blink();
+        // lcd_.setCursor(9, 1);
+        // lcd_.blink();
+    //}
+//}
+
+void StarWars::AddNote(float freq, float duration, bool doubleDelay = false) {
+    freq_[notes_] = round(freq);
+    durations_[notes_] = round(duration);
+
+    //delay duration should always be 1 ms more than the note in order to separate them.
+    delays_[notes_ + 1] = (doubleDelay ? 2 * (durations_[notes_] + 1) : durations_[notes_] + 1);
 
     ++notes_;
 }
 
-void StarWars::InitAudio() {
-    Timers t(TP);
+void StarWars::InitNotes() {
+    AddNote(LA3, Q);
+    AddNote(LA3, Q);
+    AddNote(LA3, Q);
+    AddNote(F3,  E + S);
+    AddNote(C4,  S);
 
-    t.Add(LA3,Q);
-    t.Add(LA3,Q);
-    t.Add(LA3,Q);
-    t.Add(F3,E+S);
-    t.Add(C4,S);
+    AddNote(LA3, Q);
+    AddNote(F3,  E + S);
+    AddNote(C4,  S);
+    AddNote(LA3, H);
 
-    t.Add(LA3,Q);
-    t.Add(F3,E+S);
-    t.Add(C4,S);
-    t.Add(LA3,H);
+    AddNote(E4,  Q);
+    AddNote(E4,  Q);
+    AddNote(E4,  Q);
+    AddNote(F4,  E + S);
+    AddNote(C4,  S);
 
-    t.Add(E4,Q);
-    t.Add(E4,Q);
-    t.Add(E4,Q);
-    t.Add(F4,E+S);
-    t.Add(C4,S);
+    AddNote(Ab3, Q);
+    AddNote(F3,  E + S);
+    AddNote(C4,  S);
+    AddNote(LA3, H);
 
-    t.Add(Ab3,Q);
-    t.Add(F3,E+S);
-    t.Add(C4,S);
-    t.Add(LA3,H);
+    AddNote(LA4, Q);
+    AddNote(LA3, E + S);
+    AddNote(LA3, S);
+    AddNote(LA4, Q);
+    AddNote(Ab4, E + S);
+    AddNote(G4,  S);
+
+    AddNote(Gb4, S);
+    AddNote(E4,  S);
+    AddNote(F4,  E, true);//PAUSE
+    AddNote(Bb3, E);
+    AddNote(Eb4, Q);
+    AddNote(D4,  E + S);
+    AddNote(Db4, S);
+
+    AddNote(C4,  S);
+    AddNote(B3,  S);
+    AddNote(C4,  E, true);//PAUSE QUASI FINE RIGA
+    AddNote(F3,  E);
+    AddNote(Ab3, Q);
+    AddNote(F3,  E + S);
+    AddNote(LA3, S);
+
+    AddNote(C4,  Q);
+    AddNote(LA3, E + S);
+    AddNote(C4,  S);
+    AddNote(E4,  H);
+
+    AddNote(LA4, Q);
+    AddNote(LA3, E + S);
+    AddNote(LA3, S);
+    AddNote(LA4, Q);
+    AddNote(Ab4, E + S);
+    AddNote(G4,  S);
+
+    AddNote(Gb4, S);
+    AddNote(E4,  S);
+    AddNote(F4,  E, true);//PAUSE
+    AddNote(Bb3, E);
+    AddNote(Eb4, Q);
+    AddNote(D4,  E + S);
+    AddNote(Db4, S);
+
+    AddNote(C4,  S);
+    AddNote(B3,  S);
+    AddNote(C4,  E, true);//PAUSE QUASI FINE RIGA
+    AddNote(F3,  E);
+    AddNote(Ab3, Q);
+    AddNote(F3,  E + S);
+    AddNote(C4,  S);
+
+    AddNote(LA3, Q);
+    AddNote(F3,  E + S);
+    AddNote(C4,  S);
+    AddNote(LA3, H);
+
+    pauseDuration_ = 2 * H;
 }
 
-void StarWars::PlayAudio() {
-    for (uint8_t note = 0; note < notes_; ++ note) {
-        unsigned long lastUpdate = millis();
+void StarWars::PlayNotes() {
+    auto currentMillis = millis();
+    if (currentMillis - startMillis_ >= delays_[currNote_] && currNote_ < notes_) {
+        startMillis_ = currentMillis;
+
+        tone(buzzerPin_, freq_[currNote_], durations_[currNote_]);
+
+        ++currNote_;
     }
 
+    if (currNote_ == notes_ && currentMillis - startMillis_ >= pauseDuration_) {
+       currNote_ = 0;
+    }
 }
 
-void PlayAudio_old() {
-    //delay duration should always be 1 ms more than the note in order to separate them.
-    //tone(pin, note, duration)
-    tone(TP,LA3,Q);
-    delay(1+Q);
-    tone(TP,LA3,Q);
-    delay(1+Q);
-    tone(TP,LA3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-
-    tone(TP,LA3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,LA3,H);
-    delay(1+H);
-
-    tone(TP,E4,Q);
-    delay(1+Q);
-    tone(TP,E4,Q);
-    delay(1+Q);
-    tone(TP,E4,Q);
-    delay(1+Q);
-    tone(TP,F4,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-
-    tone(TP,Ab3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,LA3,H);
-    delay(1+H);
-
-    tone(TP,LA4,Q);
-    delay(1+Q);
-    tone(TP,LA3,E+S);
-    delay(1+E+S);
-    tone(TP,LA3,S);
-    delay(1+S);
-    tone(TP,LA4,Q);
-    delay(1+Q);
-    tone(TP,Ab4,E+S);
-    delay(1+E+S);
-    tone(TP,G4,S);
-    delay(1+S);
-
-    tone(TP,Gb4,S);
-    delay(1+S);
-    tone(TP,E4,S);
-    delay(1+S);
-    tone(TP,F4,E);
-    delay(1+E);
-    delay(1+E);//PAUSE
-    tone(TP,Bb3,E);
-    delay(1+E);
-    tone(TP,Eb4,Q);
-    delay(1+Q);
-    tone(TP,D4,E+S);
-    delay(1+E+S);
-    tone(TP,Db4,S);
-    delay(1+S);
-
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,B3,S);
-    delay(1+S);
-    tone(TP,C4,E);
-    delay(1+E);
-    delay(1+E);//PAUSE QUASI FINE RIGA
-    tone(TP,F3,E);
-    delay(1+E);
-    tone(TP,Ab3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,LA3,S);
-    delay(1+S);
-
-    tone(TP,C4,Q);
-    delay(1+Q);
-    tone(TP,LA3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,E4,H);
-    delay(1+H);
-
-    tone(TP,LA4,Q);
-    delay(1+Q);
-    tone(TP,LA3,E+S);
-    delay(1+E+S);
-    tone(TP,LA3,S);
-    delay(1+S);
-    tone(TP,LA4,Q);
-    delay(1+Q);
-    tone(TP,Ab4,E+S);
-    delay(1+E+S);
-    tone(TP,G4,S);
-    delay(1+S);
-
-    tone(TP,Gb4,S);
-    delay(1+S);
-    tone(TP,E4,S);
-    delay(1+S);
-    tone(TP,F4,E);
-    delay(1+E);
-    delay(1+E);//PAUSE
-    tone(TP,Bb3,E);
-    delay(1+E);
-    tone(TP,Eb4,Q);
-    delay(1+Q);
-    tone(TP,D4,E+S);
-    delay(1+E+S);
-    tone(TP,Db4,S);
-    delay(1+S);
-
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,B3,S);
-    delay(1+S);
-    tone(TP,C4,E);
-    delay(1+E);
-    delay(1+E);//PAUSE QUASI FINE RIGA
-    tone(TP,F3,E);
-    delay(1+E);
-    tone(TP,Ab3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-
-    tone(TP,LA3,Q);
-    delay(1+Q);
-    tone(TP,F3,E+S);
-    delay(1+E+S);
-    tone(TP,C4,S);
-    delay(1+S);
-    tone(TP,LA3,H);
-    delay(1+H);
-
-    delay(2*H);
+void StarWars::Loop() {
+    PlayNotes();
 }

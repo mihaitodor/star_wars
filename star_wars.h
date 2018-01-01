@@ -14,8 +14,6 @@ public:
     void InitNotes();
     void PlayNotes();
 
-    void Loop();
-
 private:
     StarWars();
     StarWars(const StarWars &) = delete;
@@ -32,6 +30,8 @@ private:
     uint8_t notes_ = 0;
     unsigned int freq_[66] {};
     unsigned long durations_[66] {};
+
+    // We also have a pause at the end
     unsigned long delays_[66 + 1] {};
 
     unsigned long pauseDuration_ = 0;

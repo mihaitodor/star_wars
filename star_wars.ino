@@ -132,7 +132,12 @@ void setup() {
 //}
 
 void loop() {
-    StarWars::GetInstance().Loop();
+    static bool startDelay = true;
+    if (startDelay) {
+        delay(1000);
+        startDelay = false;
+    }
+    StarWars::GetInstance().PlayNotes();
 
     //sw.FadeTitle();
 

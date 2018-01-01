@@ -183,10 +183,10 @@ const StarWars &StarWars::GetInstance() {
 }
 
 void StarWars::PrintTitle() {
-    lcd_.setCursor(6, 0);
-    lcd_.print("STAR");
-    lcd_.setCursor(6, 1);
-    lcd_.print("WARS");
+    lcd_.setCursor(2, 0);
+    lcd_.print("La Multi Ani");
+    lcd_.setCursor(5, 1);
+    lcd_.print("Gina!");
 }
 
 //void StarWars::FadeTitle() {
@@ -301,18 +301,18 @@ void StarWars::InitNotes() {
 void StarWars::PlayNotes() {
     auto currentMillis = millis();
     if (currentMillis - startMillis_ >= delays_[currNote_] && currNote_ < notes_) {
-        startMillis_ = currentMillis;
 
+        startMillis_ = currentMillis;
+        Serial.print(freq_[currNote_]);
+        Serial.print(" - ");
+        Serial.println(durations_[currNote_]);
         tone(buzzerPin_, freq_[currNote_], durations_[currNote_]);
 
         ++currNote_;
     }
 
     if (currNote_ == notes_ && currentMillis - startMillis_ >= pauseDuration_) {
-       currNote_ = 0;
+        Serial.print("x: "); Serial.println(currentMillis);
+        currNote_ = 0;
     }
-}
-
-void StarWars::Loop() {
-    PlayNotes();
 }
